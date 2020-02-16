@@ -5,11 +5,11 @@ import java.io.Serializable
 data class User (
     var courseName : String? = null,
     var coursePeriod : String? = null,
-    var ra : String? = null,
-    var rg : String? = null,
-    var cpf : String? = null,
-    var birthday : String? = null,
-    var create_date : String? = null,
-    var expire_date : String? = null,
-    var college_name : String? = null
+    var userRA : String? = null,
+    var userRG : String? = null,
+    var userCPF : String? = null,
+    var userBirthday : String? = null,
+    var createDate : String? = null,
+    var expireDate : String? = null,
+    var collegeName : String? = null
 ) : Serializable

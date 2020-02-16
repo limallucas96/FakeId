@@ -4,20 +4,22 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
+import android.view.Menu
+import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
-import android.widget.LinearLayout
-import android.widget.EditText
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), DialogUtilsListener {
+
+    private var menuSaveItem: MenuItem? = null
 
     private var easterEggCount = 0
-    private var isEditableMode = true // TODO -> INIT THIS AS FALSE
+    private var isEditableMode = false // TODO -> INIT THIS AS FALSE
     private var session: Session? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        DialogUtils.setListener(this)
         session = Session(this)
 
         setupListeners()
@@ -30,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         profile_picture.setOnClickListener {
             easterEggCount += 1
             if (easterEggCount >= 5) {
-                showEasterEggDialog()
+                DialogUtils.showDefaultDialog(this, DialogType.DEFAULT)
             }
         }
 
@@ -43,24 +45,6 @@ class MainActivity : AppCompatActivity() {
         expediton_time.setOnClickListener { showEditFieldDialog(EditModeType.CREATE_DATE) }
         expire_date.setOnClickListener { showEditFieldDialog(EditModeType.EXPIRE_DATE) }
         colle_name.setOnClickListener { showEditFieldDialog(EditModeType.COLLEGE_NAME) }
-    }
-
-    private fun updateSession(type: EditModeType, value: String) {
-        session?.getSession()?.apply {
-            when (type) {
-                EditModeType.COURSE_NAME -> courseName = value
-                EditModeType.COURSE_PERIOD -> coursePeriod = value
-                EditModeType.RA -> ra = value
-                EditModeType.RG -> rg = value
-                EditModeType.CPF -> cpf = value
-                EditModeType.BIRTHDAY -> birthday = value
-                EditModeType.CREATE_DATE -> create_date = value
-                EditModeType.EXPIRE_DATE -> expire_date = value
-                EditModeType.COLLEGE_NAME -> college_name = value
-            }
-        }?.let { user ->
-            session?.setSession(user)
-        }
     }
 
     private fun updateView(type: EditModeType, value: String) {
@@ -77,42 +61,89 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showEasterEggDialog() {
-        AlertDialog.Builder(this@MainActivity).apply {
-            setTitle("Editar documento")
-            setMessage("Tem certeza que deseja editar seu documento?")
-            setPositiveButton("Sim") { _, _ ->
-                isEditableMode = true
-            }
-            setNegativeButton("Cancelar") { _, _ ->
-                easterEggCount = 0
-            }.show()
+    private fun enterInEditableMode() {
+        isEditableMode = true
+        menuSaveItem?.isVisible = isEditableMode
+    }
+
+    private fun exitEditableMode() {
+        easterEggCount = 0
+        isEditableMode = false
+        menuSaveItem?.isVisible = isEditableMode
+        saveChanges()
+    }
+
+    private fun fetchSession(){
+        session?.getSession()?.let {
+            course.text = it.courseName
+            time.text = it.coursePeriod
+            ra.text = it.userRA
+            rg.text = it.userRG
+            cpf.text = it.userCPF
+            birthday.text = it.userBirthday
+            expediton_time.text = it.createDate
+            expire_date.text = it.expireDate
+            colle_name.text = it.collegeName
         }
+    }
+
+    private fun saveChanges() {
+        var user = session?.getSession()
+        if (user == null) {
+            user = User()
+        }
+        user?.apply {
+            courseName = course.text.toString()
+            coursePeriod = time.text.toString()
+            userRA = ra.text.toString()
+            userRG = rg.text.toString()
+            userCPF = cpf.text.toString()
+            userBirthday = birthday.text.toString()
+            createDate = expediton_time.text.toString()
+            expireDate = expire_date.text.toString()
+            collegeName = colle_name.text.toString()
+        }
+        session?.setSession(user)
     }
 
     private fun showEditFieldDialog(type: EditModeType) {
         if (isEditableMode) {
-            val input = EditText(this@MainActivity)
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            input.layoutParams = lp
-
-            AlertDialog.Builder(this@MainActivity).apply {
-                setTitle(EditModeType.fromType(type)?.title)
-                setMessage("Tem certeza que deseja editar seu documento?")
-                setView(input)
-                setPositiveButton("Sim") { _, _ ->
-                    input.text?.toString()?.let {
-                        updateSession(type, it)
-                        updateView(type, it)
-                    }
-                }
-                setNegativeButton("Cancelar") { _, _ ->
-                    easterEggCount = 0
-                }.show()
-            }
+            DialogUtils.showEditFieldDialog(this, type)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        fetchSession()
+    }
+
+    override fun onPositiveButton() {
+        easterEggCount = 0
+        enterInEditableMode()
+    }
+
+    override fun onNegativeButton() {
+        exitEditableMode()
+    }
+
+    override fun onFieldUpdated(type: EditModeType, value: String) {
+        updateView(type, value)
+    }
+
+    override fun onSave() {
+        exitEditableMode()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        menuSaveItem = menu.findItem(R.id.save)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.save -> DialogUtils.showDefaultDialog(this, DialogType.SAVE)
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Fatec</string>
+    <string name="save">Salvar</string>
+
+    <string name="title">Editar documento</string>
+    <string name="message">Tem certeza que deseja editar seu documento?</string>
+    <string name="positive">Sim</string>
+    <string name="negative">Cancelar</string>
+
+    <string name="title_save">Alterações</string>
+    <string name="message_save">Tem certeza que deseja salvar suas alterações?</string>
+    <string name="positive_save">Sim</string>
+    <string name="negative_save">Cancelar</string>
+
 </resources>
