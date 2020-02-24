@@ -11,5 +11,7 @@ data class User (
     var userBirthday : String? = null,
     var createDate : String? = null,
     var expireDate : String? = null,
-    var collegeName : String? = null
+    var collegeName : String? = null,
+    var userProfilePhotoPath : String? = null,
+    var companyPhotoPath : String? = null
 ) : Serializable

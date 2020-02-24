@@ -1,11 +1,13 @@
 package br.com.lucas.fatec
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import br.com.lucas.fatec.FileUtils.RESULT_GALLERY
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), DialogUtilsListener {
@@ -15,6 +17,8 @@ class MainActivity : AppCompatActivity(), DialogUtilsListener {
     private var easterEggCount = 0
     private var isEditableMode = false // TODO -> INIT THIS AS FALSE
     private var session: Session? = null
+
+    private var profilePhotoPath = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +37,10 @@ class MainActivity : AppCompatActivity(), DialogUtilsListener {
             easterEggCount += 1
             if (easterEggCount >= 5) {
                 DialogUtils.showDefaultDialog(this, DialogType.DEFAULT)
+            }
+
+            if (isEditableMode) {
+                FileUtils.openGallery(this@MainActivity)
             }
         }
 
@@ -73,7 +81,7 @@ class MainActivity : AppCompatActivity(), DialogUtilsListener {
         saveChanges()
     }
 
-    private fun fetchSession(){
+    private fun fetchSession() {
         session?.getSession()?.let {
             course.text = it.courseName
             time.text = it.coursePeriod
@@ -84,6 +92,7 @@ class MainActivity : AppCompatActivity(), DialogUtilsListener {
             expediton_time.text = it.createDate
             expire_date.text = it.expireDate
             colle_name.text = it.collegeName
+            profilePhotoPath = it.userProfilePhotoPath ?: ""
         }
     }
 
@@ -109,6 +118,19 @@ class MainActivity : AppCompatActivity(), DialogUtilsListener {
     private fun showEditFieldDialog(type: EditModeType) {
         if (isEditableMode) {
             DialogUtils.showEditFieldDialog(this, type)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        when (requestCode) {
+            RESULT_GALLERY -> {
+                profilePhotoPath = FileUtils.getPath(data?.data, this@MainActivity)
+                FileUtils.toBitmap(profilePhotoPath)?.let { profilePhoto ->
+                    profile_picture.setImageBitmap(profilePhoto)
+                }
+            }
         }
     }
 
